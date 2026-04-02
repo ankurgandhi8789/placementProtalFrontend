@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+* {
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #F8FAFC;
+  color: #111827;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Slick slider dots */
+.slick-dots li button:before {
+  color: #2563EB !important;
+  font-size: 10px !important;
+}
+.slick-dots {
+  bottom: 12px !important;
+}
+.slick-slide > div {
+  display: block;
+}
