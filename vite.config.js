@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': 'https://placement-protal-backend.vercel.app/',
+      '/api': 'https://placement-protal-backend.vercel.app',
     },
   },
   optimizeDeps: {
