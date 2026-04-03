@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'https://placement-protal-backend.vercel.app',
+      // '/api': 'http://localhost:8080',
     },
   },
   optimizeDeps: {
