@@ -8,7 +8,6 @@ import GuestRoute from './components/common/GuestRoute';
 import PublicLayout from './components/layout/PublicLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import DashboardLayout from './components/layout/DashboardLayout';
-import TeacherLayout    from './components/layout/TeacherLayout';
 
 // Public Pages
 import HomePage from './pages/public/HomePage';
@@ -24,11 +23,11 @@ import ResetPasswordPage from './pages/public/ResetPasswordPage';
 
 // Teacher Pages
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
-import TeacherApply     from './pages/teacher/TeacherApply';
-import TeacherEdit      from './pages/teacher/TeacherEdit';
-import TeacherProfile   from './pages/teacher/TeacherProfile';
-import TeacherHistory   from './pages/teacher/TeacherHistory';
-import TeacherStatus    from './pages/teacher/TeacherStatus';
+import TeacherApply from './pages/teacher/TeacherApply';
+import TeacherEdit from './pages/teacher/TeacherEdit';
+import TeacherProfile from './pages/teacher/TeacherProfile';
+import TeacherHistory from './pages/teacher/TeacherHistory';
+import TeacherStatus from './pages/teacher/TeacherStatus';
 
 // School Pages
 import SchoolDashboard from './pages/school/SchoolDashboard';
@@ -48,12 +47,10 @@ import AdminManagement from './pages/admin/AdminManagement';
 const App = () => (
   <BrowserRouter>
     <AuthProvider>
-      <Toaster
-        position="top-right"
-        toastOptions={{ duration: 3000, style: { borderRadius: '12px', fontSize: '14px' } }}
-      />
+      <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', fontSize: '14px' } }} />
       <Routes>
-        {/* ── All public + auth pages share PublicLayout (Navbar + Footer) ── */}
+
+        {/* Public + Auth pages (Navbar + Footer) */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
@@ -62,51 +59,42 @@ const App = () => (
           <Route path="/vacancy" element={<VacancyPage />} />
           <Route path="/terms/teacher" element={<TermsPage role="teacher" />} />
           <Route path="/terms/school" element={<TermsPage role="school" />} />
-
-          {/* Auth pages — redirect to dashboard if already logged in */}
-          <Route path="/login"          element={<GuestRoute><LoginPage /></GuestRoute>} />
-          <Route path="/register"       element={<GuestRoute><RegisterPage /></GuestRoute>} />
+          <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+          <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
           <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         </Route>
 
-        {/* ── Teacher Routes ── */}
-        import { Route, Navigate } from "react-router-dom";
+        {/* Teacher Routes */}
+        <Route element={<ProtectedRoute roles={['teacher']}><DashboardLayout /></ProtectedRoute>}>
+          <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
+          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+          <Route path="/teacher/profile" element={<TeacherProfile />} />
+          <Route path="/teacher/edit" element={<TeacherEdit />} />
+          <Route path="/teacher/apply" element={<TeacherApply />} />
+          <Route path="/teacher/history" element={<TeacherHistory />} />
+          <Route path="/teacher/status" element={<TeacherStatus />} />
+        </Route>
 
-<Route
-  element={
-    <ProtectedRoute roles={['teacher']}>
-      <DashboardLayout />
-    </ProtectedRoute>
-  }
->
-  {/* Default redirect */}
-  <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
-    <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-    <Route path="/teacher/profile" element={<TeacherProfile />} />
-    <Route path="/teacher/edit" element={<TeacherEdit />} />
-    <Route path="/teacher/apply" element={<TeacherApply />} />
-    <Route path="/teacher/history" element={<TeacherHistory />} />
-    <Route path="/teacher/status" element={<TeacherStatus />} />
-  </Route>
-
-        {/* ── School Routes ── */}
+        {/* School Routes */}
         <Route element={<ProtectedRoute roles={['school']}><DashboardLayout /></ProtectedRoute>}>
-          <Route path="/school/dashboard"    element={<SchoolDashboard />} />
-          <Route path="/school/profile"      element={<SchoolProfile />} />
+          <Route path="/school" element={<Navigate to="/school/dashboard" replace />} />
+          <Route path="/school/dashboard" element={<SchoolDashboard />} />
+          <Route path="/school/profile" element={<SchoolProfile />} />
           <Route path="/school/requirements" element={<SchoolRequirements />} />
         </Route>
 
-        {/* ── Admin Routes ── */}
+        {/* Admin Routes */}
         <Route element={<ProtectedRoute roles={['admin', 'superadmin']}><AdminLayout /></ProtectedRoute>}>
-          <Route path="/admin/dashboard"      element={<AdminDashboard />} />
-          <Route path="/admin/teachers"       element={<AdminTeachers />} />
-          <Route path="/admin/teachers/:id"   element={<AdminTeacherDetail />} />
-          <Route path="/admin/schools"        element={<AdminSchools />} />
-          <Route path="/admin/schools/:id"    element={<AdminSchoolDetail />} />
-          <Route path="/admin/vacancies"      element={<AdminVacancies />} />
-          <Route path="/admin/content"        element={<AdminContent />} />
-          <Route path="/admin/admins"         element={<AdminManagement />} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/teachers" element={<AdminTeachers />} />
+          <Route path="/admin/teachers/:id" element={<AdminTeacherDetail />} />
+          <Route path="/admin/schools" element={<AdminSchools />} />
+          <Route path="/admin/schools/:id" element={<AdminSchoolDetail />} />
+          <Route path="/admin/vacancies" element={<AdminVacancies />} />
+          <Route path="/admin/content" element={<AdminContent />} />
+          <Route path="/admin/admins" element={<AdminManagement />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

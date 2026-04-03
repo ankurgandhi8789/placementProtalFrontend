@@ -1,303 +1,266 @@
-// src/pages/teacher/TeacherHistory.jsx
 import { useEffect, useState } from 'react';
 import { teacherAPI } from '../../api';
-import Spinner from '../../components/common/Spinner';
 import StatusBadge from '../../components/common/StatusBadge';
+import Spinner from '../../components/common/Spinner';
 import {
-  CheckCircle, Clock, AlertCircle, TrendingUp,
-  Calendar, MessageSquare, Building2, Star
+  CheckCircle, Clock, TrendingUp, FileText,
+  BookOpen, GraduationCap, Briefcase, Calendar,
+  User, MapPin, Award
 } from 'lucide-react';
 
-// ─── Full pipeline with descriptions ──────────────────────────────────────
-const PIPELINE_MAP = {
-  applied:              { label: 'Application Received',      icon: '📝', color: 'gray',   desc: 'Your profile has been registered in our system.' },
-  contacted:            { label: 'Admin Contacted You',       icon: '📞', color: 'blue',   desc: 'Our team has reached out to you for initial discussion.' },
-  test_scheduled:       { label: 'Test Scheduled',            icon: '📅', color: 'purple', desc: 'A written/practical test has been scheduled for you.' },
-  test_completed:       { label: 'Test Completed',            icon: '✅', color: 'indigo', desc: 'You have completed the test. Results under evaluation.' },
-  interview_scheduled:  { label: 'Interview Scheduled',       icon: '🤝', color: 'amber',  desc: 'A school interview has been arranged for you.' },
-  interview_completed:  { label: 'Interview Completed',       icon: '🎯', color: 'orange', desc: 'Interview done. Final decision pending.' },
-  assigned:             { label: 'Assigned to School',        icon: '🏫', color: 'emerald',desc: 'You have been placed at a school.' },
-  completed:            { label: 'Placement Completed',       icon: '🎉', color: 'green',  desc: 'Your placement process is successfully completed.' },
-  rejected:             { label: 'Not Selected',              icon: '❌', color: 'red',    desc: 'Unfortunately you were not selected this time.' },
-};
+const PIPELINE = [
+  { key: 'applied',        label: 'Application Received', icon: '📝', color: 'gray' },
+  { key: 'contacted',      label: 'Contacted by Admin',   icon: '📞', color: 'blue' },
+  { key: 'test_scheduled', label: 'Test Scheduled',       icon: '📋', color: 'purple' },
+  { key: 'interview',      label: 'Interview',            icon: '🤝', color: 'amber' },
+  { key: 'assigned',       label: 'Assigned to School',   icon: '🏫', color: 'emerald' },
+  { key: 'completed',      label: 'Placement Completed',  icon: '🎉', color: 'green' },
+];
 
-// Completion % per stage
-const STAGE_PCT = {
-  applied: 10, contacted: 22, test_scheduled: 38, test_completed: 52,
-  interview_scheduled: 65, interview_completed: 78, assigned: 90, completed: 100, rejected: 0,
-};
-
-const colorMap = {
-  gray:   { dot: 'bg-gray-400',   bg: 'bg-gray-50',   border: 'border-gray-200',   text: 'text-gray-700',   badge: 'bg-gray-100 text-gray-700' },
-  blue:   { dot: 'bg-blue-500',   bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',   badge: 'bg-blue-100 text-blue-700' },
-  purple: { dot: 'bg-purple-500', bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', badge: 'bg-purple-100 text-purple-700' },
-  indigo: { dot: 'bg-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', badge: 'bg-indigo-100 text-indigo-700' },
-  amber:  { dot: 'bg-amber-500',  bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-700',  badge: 'bg-amber-100 text-amber-700' },
-  orange: { dot: 'bg-orange-500', bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700' },
-  emerald:{ dot: 'bg-emerald-500',bg: 'bg-emerald-50',border: 'border-emerald-200',text: 'text-emerald-700',badge: 'bg-emerald-100 text-emerald-700' },
-  green:  { dot: 'bg-green-500',  bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700',  badge: 'bg-green-100 text-green-700' },
-  red:    { dot: 'bg-red-500',    bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700',    badge: 'bg-red-100 text-red-700' },
-};
-
-// ─── Progress Ring ─────────────────────────────────────────────────────────
-const ProgressRing = ({ pct, size = 100, stroke = 9 }) => {
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (pct / 100) * circ;
-  return (
-    <svg width={size} height={size} className="-rotate-90">
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E5E7EB" strokeWidth={stroke} />
-      <circle cx={size/2} cy={size/2} r={r} fill="none"
-        stroke={pct === 100 ? '#10B981' : pct === 0 ? '#EF4444' : '#2563EB'}
-        strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset}
-        strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />
-    </svg>
-  );
-};
+const Section = ({ icon: Icon, title, color = 'blue', children }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <h4 className={`font-bold text-gray-900 text-sm mb-4 flex items-center gap-2`}>
+      <Icon size={15} className={`text-${color}-600`} /> {title}
+    </h4>
+    {children}
+  </div>
+);
 
 const TeacherHistory = () => {
-  const [data, setData]     = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    teacherAPI.getStatus()
-      .then(({ data }) => setData(data))
+    Promise.all([teacherAPI.getProfile(), teacherAPI.getStatus()])
+      .then(([p, s]) => {
+        setProfile(p.data.profile || p.data);
+        setStatus(s.data);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return (
-    <div className="flex justify-center py-20"><Spinner size="lg" /></div>
-  );
+  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
 
-  const currentStage = data?.currentStatus || 'applied';
-  const pct = STAGE_PCT[currentStage] ?? 10;
-  const history = data?.statusHistory || [];
-  const currentInfo = PIPELINE_MAP[currentStage] || PIPELINE_MAP['applied'];
-  const colors = colorMap[currentInfo.color];
+  const currentIdx = PIPELINE.findIndex(s => s.key === status?.currentStatus);
+  const pct = Math.round(((currentIdx + 1) / PIPELINE.length) * 100);
 
-  // Build full ordered pipeline with "reached" flag
-  const orderedStages = Object.keys(PIPELINE_MAP).filter(k => k !== 'rejected');
-  const currentOrderIdx = orderedStages.indexOf(currentStage);
+  // Completion checklist
+  const checks = [
+    { label: 'Basic Info Filled',       done: !!(profile?.fullName && profile?.phone) },
+    { label: 'Profile Photo Uploaded',  done: !!profile?.profilePhoto },
+    { label: 'Subjects Selected',       done: profile?.subjects?.length > 0 },
+    { label: 'Class Levels Selected',   done: profile?.classLevels?.length > 0 },
+    { label: 'Education Added',         done: profile?.education?.length > 0 },
+    { label: 'Resume Uploaded',         done: !!profile?.resume },
+    { label: 'Experience Added',        done: profile?.experienceYears > 0 },
+    { label: 'Application Submitted',   done: !!profile?.isProfileComplete },
+  ];
+  const completedChecks = checks.filter(c => c.done).length;
+  const checkPct = Math.round((completedChecks / checks.length) * 100);
 
   return (
     <div className="max-w-2xl space-y-5">
       <div>
         <h2 className="text-2xl font-extrabold text-gray-900">My History</h2>
-        <p className="text-gray-400 text-sm mt-1">Track every step of your placement journey</p>
+        <p className="text-gray-400 text-sm mt-1">Track your application progress and history</p>
       </div>
 
-      {/* Summary card */}
-      <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-2xl p-5 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="flex items-center gap-4">
-          <div className="relative flex-shrink-0">
-            <ProgressRing pct={pct} size={90} stroke={8} />
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-white font-black text-2xl leading-none">{pct}</span>
-              <span className="text-blue-200 text-[9px] font-bold">%</span>
-            </div>
+      {/* Overall progress card */}
+      <div className="bg-gradient-to-br from-blue-900 to-blue-700 rounded-2xl p-5 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-blue-200 text-xs font-semibold mb-1">Placement Progress</p>
+            <StatusBadge status={status?.currentStatus || 'applied'} />
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl">{currentInfo.icon}</span>
-              <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${colors.badge}`}>
-                {currentInfo.label}
+          <div className="text-right">
+            <p className="text-amber-400 font-black text-3xl">{pct}%</p>
+            <p className="text-blue-300 text-xs">Pipeline complete</p>
+          </div>
+        </div>
+        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+          <div className="h-full bg-amber-400 rounded-full transition-all duration-700"
+            style={{ width: `${pct}%` }} />
+        </div>
+        <p className="text-blue-200 text-xs mt-2">
+          Step {currentIdx + 1} of {PIPELINE.length} — {PIPELINE[currentIdx]?.label || 'Registered'}
+        </p>
+      </div>
+
+      {/* Profile completion checklist */}
+      <Section icon={TrendingUp} title={`Profile Checklist (${completedChecks}/${checks.length} done)`} color="blue">
+        <div className="mb-3">
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-gray-500">Completion</span>
+            <span className="font-bold text-blue-600">{checkPct}%</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all duration-700"
+              style={{ width: `${checkPct}%` }} />
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {checks.map(({ label, done }) => (
+            <div key={label} className={`flex items-center gap-2.5 p-2.5 rounded-xl text-sm ${
+              done ? 'bg-emerald-50 border border-emerald-100' : 'bg-gray-50 border border-gray-100'
+            }`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                done ? 'bg-emerald-500' : 'bg-gray-200'
+              }`}>
+                {done
+                  ? <CheckCircle size={12} className="text-white" />
+                  : <Clock size={11} className="text-gray-400" />}
+              </div>
+              <span className={`text-xs font-medium ${done ? 'text-emerald-700' : 'text-gray-400'}`}>
+                {label}
               </span>
             </div>
-            <p className="text-blue-100 text-sm leading-relaxed">{currentInfo.desc}</p>
-            <p className="text-blue-300 text-[11px] mt-2">
-              {currentOrderIdx + 1} of {orderedStages.length} stages completed
-            </p>
-          </div>
+          ))}
         </div>
-      </div>
+      </Section>
 
-      {/* Admin notes */}
-      {data?.adminNotes && (
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3">
-          <MessageSquare size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-bold text-blue-800 text-sm">Message from Admin</p>
-            <p className="text-blue-700 text-sm mt-0.5">{data.adminNotes}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Assigned school */}
-      {data?.assignedSchool && (
-        <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-5 text-white">
-          <div className="flex items-center gap-2 mb-2">
-            <Building2 size={18} className="text-emerald-200" />
-            <p className="font-black text-lg">You're Placed! 🎉</p>
-          </div>
-          <p className="text-emerald-100 text-sm">Assigned to:</p>
-          <p className="font-extrabold text-xl mt-0.5">{data.assignedSchool.schoolName}</p>
-          <p className="text-emerald-200 text-sm">
-            {data.assignedSchool.city}, {data.assignedSchool.state}
-          </p>
-          {data.assignedAt && (
-            <p className="text-emerald-300 text-xs mt-2 flex items-center gap-1">
-              <Calendar size={11} />
-              Assigned on {new Date(data.assignedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Scheduled dates */}
-      {(data?.testDate || data?.interviewDate) && (
-        <div className="grid grid-cols-2 gap-3">
-          {data.testDate && (
-            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-4">
-              <p className="text-purple-600 font-bold text-xs uppercase tracking-wide mb-1">📅 Test Date</p>
-              <p className="text-purple-900 font-extrabold text-base">
-                {new Date(data.testDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-              </p>
-              <p className="text-purple-600 text-xs">
-                {new Date(data.testDate).toLocaleDateString('en-IN', { year: 'numeric' })}
-              </p>
-            </div>
-          )}
-          {data.interviewDate && (
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
-              <p className="text-amber-600 font-bold text-xs uppercase tracking-wide mb-1">🤝 Interview</p>
-              <p className="text-amber-900 font-extrabold text-base">
-                {new Date(data.interviewDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-              </p>
-              <p className="text-amber-600 text-xs">
-                {new Date(data.interviewDate).toLocaleDateString('en-IN', { year: 'numeric' })}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Full pipeline tracker */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-        <h3 className="font-extrabold text-gray-900 text-sm mb-5 flex items-center gap-2">
-          <TrendingUp size={16} className="text-blue-600" />
-          Placement Pipeline
-        </h3>
-
-        <div className="space-y-1">
-          {orderedStages.map((stageKey, idx) => {
-            const info    = PIPELINE_MAP[stageKey];
-            const c       = colorMap[info.color];
-            const done    = idx < currentOrderIdx;
-            const current = stageKey === currentStage;
-            const pending = idx > currentOrderIdx;
-            // Find if there's a history entry for this stage
-            const histEntry = history.find(h => h.status === stageKey);
-
+      {/* Pipeline history */}
+      <Section icon={TrendingUp} title="Placement Pipeline History" color="blue">
+        <div className="space-y-2">
+          {PIPELINE.map((step, idx) => {
+            const isDone = idx < currentIdx;
+            const isCurrent = idx === currentIdx;
             return (
-              <div key={stageKey} className="flex gap-3">
-                {/* Timeline spine */}
-                <div className="flex flex-col items-center">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
-                    border-2 transition-all ${
-                    done    ? 'bg-emerald-500 border-emerald-500' :
-                    current ? `${c.bg} border-current ${c.text} ring-4 ring-offset-1` :
-                              'bg-gray-50 border-gray-200'
-                  }`}
-                    style={current ? { ringColor: 'currentColor' } : {}}>
-                    {done    ? <CheckCircle size={16} className="text-white" /> :
-                     current ? <span className="text-lg">{info.icon}</span> :
-                               <span className="text-gray-300 text-xs font-bold">{idx + 1}</span>}
-                  </div>
-                  {idx < orderedStages.length - 1 && (
-                    <div className={`w-0.5 h-8 mt-1 rounded-full transition-colors ${
-                      done ? 'bg-emerald-300' : 'bg-gray-100'
-                    }`} />
-                  )}
+              <div key={step.key} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                isCurrent ? 'bg-blue-50 border border-blue-100' :
+                isDone ? 'bg-emerald-50 border border-emerald-100' :
+                'bg-gray-50 border border-transparent'
+              }`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base ${
+                  isDone ? 'bg-emerald-500' : isCurrent ? 'bg-blue-600' : 'bg-gray-200'
+                }`}>
+                  {isDone
+                    ? <CheckCircle size={16} className="text-white" />
+                    : <span>{step.icon}</span>}
                 </div>
-
-                {/* Content */}
-                <div className={`flex-1 pb-4 ${idx < orderedStages.length - 1 ? 'mb-0' : ''}`}>
-                  <div className={`p-3 rounded-xl transition-all ${
-                    current ? `${c.bg} border ${c.border}` :
-                    done    ? 'bg-emerald-50 border border-emerald-100' :
-                              'bg-gray-50'
+                <div className="flex-1">
+                  <p className={`text-sm font-semibold ${
+                    isDone ? 'text-emerald-700' : isCurrent ? 'text-blue-700' : 'text-gray-400'
                   }`}>
-                    <div className="flex items-center justify-between">
-                      <p className={`font-bold text-sm ${
-                        done ? 'text-emerald-700' : current ? c.text : 'text-gray-400'
-                      }`}>
-                        {info.label}
-                        {current && <span className="ml-2 text-[10px] font-bold bg-white/50 px-2 py-0.5 rounded-full">← Current</span>}
-                      </p>
-                      {done && <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />}
-                      {pending && <Clock size={13} className="text-gray-300 flex-shrink-0" />}
-                    </div>
-                    {!pending && (
-                      <p className={`text-xs mt-0.5 ${done ? 'text-emerald-600' : current ? c.text : 'text-gray-300'}`}>
-                        {info.desc}
-                      </p>
+                    {step.label}
+                    {isCurrent && (
+                      <span className="ml-2 text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                        Current
+                      </span>
                     )}
-                    {histEntry?.updatedAt && (
-                      <p className="text-[10px] text-gray-400 mt-1.5 flex items-center gap-1">
-                        <Calendar size={10} />
-                        {new Date(histEntry.updatedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short', year: 'numeric',
-                          hour: '2-digit', minute: '2-digit'
-                        })}
-                      </p>
-                    )}
-                    {histEntry?.note && (
-                      <p className="text-xs text-gray-500 mt-1 italic">"{histEntry.note}"</p>
-                    )}
-                  </div>
+                  </p>
                 </div>
+                <span className={`text-xs font-bold ${
+                  isDone ? 'text-emerald-400' : isCurrent ? 'text-blue-400' : 'text-gray-300'
+                }`}>
+                  {idx + 1}/{PIPELINE.length}
+                </span>
               </div>
             );
           })}
+        </div>
+      </Section>
 
-          {/* Rejected state */}
-          {currentStage === 'rejected' && (
-            <div className="flex gap-3">
-              <div className="flex flex-col items-center">
-                <div className="w-9 h-9 rounded-full bg-red-100 border-2 border-red-400 flex items-center justify-center">
-                  <AlertCircle size={16} className="text-red-500" />
+      {/* Saved profile snapshot */}
+      {profile && (
+        <Section icon={User} title="Saved Application Snapshot" color="blue">
+          <div className="space-y-3 text-sm">
+            {[
+              { icon: User,      label: 'Name',       value: profile.fullName },
+              { icon: MapPin,    label: 'Location',   value: [profile.city, profile.state].filter(Boolean).join(', ') },
+              { icon: BookOpen,  label: 'Subjects',   value: profile.subjects?.join(', ') },
+              { icon: Award,     label: 'Experience', value: profile.experienceYears ? `${profile.experienceYears} years` : null },
+              { icon: Calendar,  label: 'Expected Salary', value: profile.expectedSalary },
+            ].filter(r => r.value).map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
+                <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Icon size={13} className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{label}</p>
+                  <p className="text-gray-800 font-medium text-sm mt-0.5">{value}</p>
                 </div>
               </div>
-              <div className="flex-1">
-                <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="font-bold text-red-700 text-sm">Application Not Selected</p>
-                  <p className="text-red-600 text-xs mt-0.5">
-                    Thank you for applying. You may re-apply after updating your profile.
-                  </p>
-                </div>
+            ))}
+          </div>
+
+          {/* Education history */}
+          {profile.education?.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1">
+                <GraduationCap size={11} /> Education History
+              </p>
+              <div className="space-y-2">
+                {profile.education.map((edu, i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-2.5 bg-blue-50 rounded-xl">
+                    <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <GraduationCap size={13} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-xs">{edu.degree} {edu.specialization && `— ${edu.specialization}`}</p>
+                      <p className="text-gray-500 text-xs">{edu.institution}</p>
+                      {edu.yearOfPassing && <p className="text-gray-400 text-[10px]">{edu.yearOfPassing} {edu.percentage && `• ${edu.percentage}%`}</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Activity log from statusHistory */}
-      {history.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-extrabold text-gray-900 text-sm mb-4 flex items-center gap-2">
-            <Calendar size={15} className="text-blue-600" />
-            Activity Log
-          </h3>
-          <div className="space-y-2">
-            {[...history].reverse().map((entry, idx) => {
-              const info = PIPELINE_MAP[entry.status] || { icon: '📋', label: entry.status, color: 'gray' };
-              const c = colorMap[info.color];
-              return (
-                <div key={idx} className={`flex items-start gap-3 p-3 rounded-xl ${c.bg} border ${c.border}`}>
-                  <span className="text-lg flex-shrink-0">{info.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-bold text-sm ${c.text}`}>{info.label}</p>
-                    {entry.note && <p className="text-xs text-gray-500 mt-0.5 italic">"{entry.note}"</p>}
+          {/* Work experience history */}
+          {profile.experiences?.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1">
+                <Briefcase size={11} /> Work Experience History
+              </p>
+              <div className="space-y-2">
+                {profile.experiences.map((exp, i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-2.5 bg-amber-50 rounded-xl">
+                    <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Briefcase size={13} className="text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-xs">{exp.schoolName}</p>
+                      <p className="text-amber-700 text-xs font-medium">{exp.role} {exp.subject && `• ${exp.subject}`}</p>
+                      <p className="text-gray-400 text-[10px]">
+                        {exp.startDate ? new Date(exp.startDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : ''}
+                        {' — '}
+                        {exp.currentlyWorking ? 'Present' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : ''}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-gray-400 flex-shrink-0 whitespace-nowrap">
-                    {new Date(entry.updatedAt).toLocaleDateString('en-IN', {
-                      day: 'numeric', month: 'short'
-                    })}
-                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Resume */}
+          {profile.resume && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <a href={profile.resume} target="_blank" rel="noreferrer"
+                className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-colors">
+                <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <FileText size={16} className="text-white" />
                 </div>
-              );
-            })}
+                <div>
+                  <p className="font-semibold text-emerald-700 text-sm">{profile.resumeOriginalName || 'View Resume'}</p>
+                  <p className="text-emerald-500 text-xs">Click to open PDF</p>
+                </div>
+              </a>
+            </div>
+          )}
+        </Section>
+      )}
+
+      {/* Admin notes */}
+      {status?.adminNotes && (
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <FileText size={14} className="text-blue-600" />
+          </div>
+          <div>
+            <p className="font-bold text-blue-800 text-sm">Admin Notes</p>
+            <p className="text-blue-700 text-sm mt-0.5">{status.adminNotes}</p>
           </div>
         </div>
       )}
