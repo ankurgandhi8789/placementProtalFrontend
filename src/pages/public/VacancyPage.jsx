@@ -3,6 +3,9 @@ import { publicAPI } from '../../api';
 import { Briefcase, MapPin, DollarSign, BookOpen, Search } from 'lucide-react';
 import Spinner from '../../components/common/Spinner';
 
+
+import FloatingHelpButton from '../../components/common/FloatingHelpButton'
+
 const VacancyPage = () => {
   const [vacancies, setVacancies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +25,7 @@ const VacancyPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <FloatingHelpButton></FloatingHelpButton> 
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">Current Vacancies</h1>
         <p className="text-gray-500 max-w-xl mx-auto">Browse available teaching positions across top schools in India.</p>

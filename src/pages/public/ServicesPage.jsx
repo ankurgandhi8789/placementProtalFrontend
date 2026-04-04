@@ -1,5 +1,8 @@
 import { GraduationCap, School, Users, FileText, CheckCircle, Star } from 'lucide-react';
 
+
+import FloatingHelpButton from '../../components/common/FloatingHelpButton'
+
 const services = [
   { icon: GraduationCap, title: 'Teacher Placement', desc: 'We match qualified teachers with schools based on subject expertise, experience, and location preferences.', color: 'bg-blue-600' },
   { icon: School, title: 'School Staffing', desc: 'Schools post their requirements and we handle the entire hiring pipeline from sourcing to final placement.', color: 'bg-amber-500' },
@@ -11,6 +14,7 @@ const services = [
 
 const ServicesPage = () => (
   <div>
+    <FloatingHelpButton></FloatingHelpButton> 
     <div className="bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl font-bold mb-4">Our Services</h1>

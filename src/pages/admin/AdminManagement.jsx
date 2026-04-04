@@ -1,20 +1,29 @@
+// src/pages/admin/AdminManagement.jsx
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../../api';
 import Spinner from '../../components/common/Spinner';
-import { UserPlus, Shield, ToggleLeft, ToggleRight } from 'lucide-react';
+import {
+  UserPlus, Shield, Lock, Mail, User,
+  CheckCircle, AlertCircle, ToggleLeft, ToggleRight,
+  Crown, Eye, EyeOff
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminManagement = () => {
-  const [admins, setAdmins] = useState([]);
+  const [admins, setAdmins]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
   const { user } = useAuth();
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const fetchAdmins = () => {
-    adminAPI.getAdmins().then(({ data }) => setAdmins(data)).finally(() => setLoading(false));
+    adminAPI.getAdmins()
+      .then(({ data }) => setAdmins(data.admins || data))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchAdmins(); }, []);
@@ -28,9 +37,7 @@ const AdminManagement = () => {
       fetchAdmins();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create admin');
-    } finally {
-      setCreating(false);
-    }
+    } finally { setCreating(false); }
   };
 
   const handleToggle = async (id) => {
@@ -38,93 +45,210 @@ const AdminManagement = () => {
       await adminAPI.toggleUserActive(id);
       toast.success('Status updated');
       fetchAdmins();
-    } catch {
-      toast.error('Failed to update');
-    }
+    } catch { toast.error('Failed to update'); }
   };
 
-  if (user?.role !== 'superadmin') {
+  // Guard: super admin only
+  const isSuperAdmin = user?.role === 'super_admin' || user?.role === 'superadmin';
+
+  if (!isSuperAdmin) {
     return (
-      <div className="text-center py-16">
-        <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-gray-700">Super Admin Only</h3>
-        <p className="text-gray-400 mt-2">This section is restricted to super admins only.</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-4">
+          <Shield size={32} className="text-red-400" />
+        </div>
+        <h3 className="text-xl font-extrabold text-gray-800 mb-2">Super Admin Only</h3>
+        <p className="text-gray-400 text-sm max-w-xs">This section is restricted to super admins. Contact your system administrator for access.</p>
       </div>
     );
   }
 
-  if (loading) return <Spinner size="lg" />;
+  if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Admin Management</h2>
-        <p className="text-gray-500 text-sm mt-1">Create and manage admin accounts</p>
-      </div>
-
-      {/* Create Admin Form */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 max-w-lg">
-        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <UserPlus className="w-5 h-5 text-blue-600" /> Create New Admin
-        </h3>
-        <form onSubmit={handleSubmit(onCreateAdmin)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-            <input {...register('name', { required: 'Name is required' })} placeholder="Admin name"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input {...register('email', { required: 'Email is required' })} type="email" placeholder="admin@email.com"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Min 6 characters' } })}
-              type="password" placeholder="Min 6 characters"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
-          </div>
-          <button type="submit" disabled={creating}
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
-            <UserPlus className="w-4 h-4" /> {creating ? 'Creating...' : 'Create Admin'}
-          </button>
-        </form>
-      </div>
-
-      {/* Admin List */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">All Admins ({admins.length})</h3>
+    <div className="space-y-5 max-w-2xl">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+          <Crown size={18} className="text-purple-600" />
         </div>
-        <div className="divide-y divide-gray-50">
-          {admins.map((admin) => (
-            <div key={admin._id} className="flex items-center justify-between px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
-                  {admin.name?.[0]?.toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">{admin.name}</p>
-                  <p className="text-gray-400 text-sm">{admin.email}</p>
-                </div>
+        <div>
+          <h2 className="text-xl font-extrabold text-gray-900">Admin Management</h2>
+          <p className="text-gray-400 text-xs mt-0.5">Create and manage admin accounts · Super Admin only</p>
+        </div>
+      </div>
+
+      {/* Super admin badge */}
+      <div className="bg-purple-50 border border-purple-200 rounded-2xl p-3 flex items-center gap-2">
+        <Crown size={14} className="text-purple-500 flex-shrink-0" />
+        <p className="text-purple-700 text-xs font-semibold">
+          You're logged in as <strong>Super Administrator</strong>. Only you can create new admin accounts.
+        </p>
+      </div>
+
+      {/* Create admin form */}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-50">
+          <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
+            <UserPlus size={15} className="text-blue-600" />
+          </div>
+          <h3 className="font-bold text-gray-900 text-sm">Create New Admin</h3>
+        </div>
+        <div className="p-5">
+          <form onSubmit={handleSubmit(onCreateAdmin)} className="space-y-4">
+            {/* Name */}
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">
+                Full Name <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input {...register('name', { required: 'Name is required' })}
+                  placeholder="Admin's full name"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-200 transition-colors" />
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${admin.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                  {admin.role}
-                </span>
-                {admin._id !== user._id && (
-                  <button onClick={() => handleToggle(admin._id)}
-                    className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${admin.isActive ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}>
-                    {admin.isActive ? <><ToggleRight className="w-4 h-4" /> Active</> : <><ToggleLeft className="w-4 h-4" /> Inactive</>}
-                  </button>
-                )}
-              </div>
+              {errors.name && (
+                <p className="text-red-400 text-xs mt-1 flex items-center gap-1"><AlertCircle size={11} />{errors.name.message}</p>
+              )}
             </div>
-          ))}
+
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">
+                Email Address <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input {...register('email', { required: 'Email is required', pattern: { value: /^\S+@\S+$/i, message: 'Invalid email' } })}
+                  type="email" placeholder="admin@maasavitri.com"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-200 transition-colors" />
+              </div>
+              {errors.email && (
+                <p className="text-red-400 text-xs mt-1 flex items-center gap-1"><AlertCircle size={11} />{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">
+                Password <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  {...register('password', {
+                    required: 'Password required',
+                    minLength: { value: 8, message: 'Min 8 characters' }
+                  })}
+                  type={showPwd ? 'text' : 'password'}
+                  placeholder="Minimum 8 characters"
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm bg-white
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-200 transition-colors"
+                />
+                <button type="button" onClick={() => setShowPwd(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-red-400 text-xs mt-1 flex items-center gap-1"><AlertCircle size={11} />{errors.password.message}</p>
+              )}
+            </div>
+
+            <button type="submit" disabled={creating}
+              className="w-full flex items-center justify-center gap-2 py-3.5
+                bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold
+                rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60 text-sm">
+              <UserPlus size={15} />
+              {creating ? 'Creating Admin...' : 'Create Admin Account'}
+            </button>
+          </form>
         </div>
+      </div>
+
+      {/* Admin list */}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Shield size={15} className="text-purple-600" />
+            </div>
+            <h3 className="font-bold text-gray-900 text-sm">All Admins</h3>
+          </div>
+          <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+            {admins.length} total
+          </span>
+        </div>
+
+        {admins.length === 0 ? (
+          <div className="p-10 text-center">
+            <p className="text-gray-400 text-sm">No admin accounts found</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {admins.map(admin => {
+              const initials = (admin.name || 'A').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+              const isSelf   = admin._id === user._id;
+              const isSA     = admin.role === 'super_admin' || admin.role === 'superadmin';
+
+              return (
+                <div key={admin._id} className={`flex items-center justify-between px-5 py-4 transition-colors ${
+                  isSelf ? 'bg-blue-50/50' : 'hover:bg-gray-50'
+                }`}>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {/* Avatar */}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                      isSA ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-bold text-gray-900 text-sm">{admin.name}</p>
+                        {isSelf && (
+                          <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded-full">You</span>
+                        )}
+                      </div>
+                      <p className="text-gray-400 text-xs truncate">{admin.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Role badge */}
+                    <span className={`hidden sm:flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isSA ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {isSA ? <><Crown size={9} /> Super Admin</> : 'Admin'}
+                    </span>
+
+                    {/* Active status */}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      admin.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+                    }`}>
+                      {admin.isActive ? 'Active' : 'Inactive'}
+                    </span>
+
+                    {/* Toggle (not self) */}
+                    {!isSelf && (
+                      <button onClick={() => handleToggle(admin._id)}
+                        className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl font-semibold transition-all ${
+                          admin.isActive
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
+                        }`}>
+                        {admin.isActive
+                          ? <><ToggleRight size={13} /> Deactivate</>
+                          : <><ToggleLeft size={13} /> Activate</>}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

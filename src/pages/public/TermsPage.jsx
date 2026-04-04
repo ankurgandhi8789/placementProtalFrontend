@@ -1,7 +1,12 @@
+
+
+import FloatingHelpButton from '../../components/common/FloatingHelpButton'
+
 const TermsPage = ({ role = 'teacher' }) => {
   const isTeacher = role === 'teacher';
   return (
     <div>
+      <FloatingHelpButton></FloatingHelpButton> 
       <div className="bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold mb-4">Terms & Conditions</h1>

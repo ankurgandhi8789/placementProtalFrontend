@@ -9,6 +9,8 @@ import {
   TrendingUp, Award, ArrowRight, CheckCircle, ChevronRight
 } from 'lucide-react';
 
+import FloatingHelpButton from '../../components/common/FloatingHelpButton'
+
 const Slider = SliderPkg.default ?? SliderPkg;
 
 const sliderSettings = {
@@ -61,7 +63,9 @@ const HomePage = () => {
 
   return (
     <div>
-      {/* ── HERO ─────────────────────────────────────────── */}     
+      {/* ── HERO ─────────────────────────────────────────── */}  
+
+      <FloatingHelpButton></FloatingHelpButton>   
 
       <section className="relative overflow-hidden px-6 py-20 md:py-24 bg-gradient-to-br from-blue-900 via-blue-800 to-[#1a3a6e]">
 
