@@ -5,8 +5,6 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import GuestRoute from './components/common/GuestRoute';
 
 // Layouts
-import PublicLayout from './components/layout/PublicLayout';
-import AdminLayout from './components/layout/AdminLayout';
 import DashboardLayout from './components/layout/DashboardLayout';
 
 // Public Pages
@@ -51,7 +49,7 @@ const App = () => (
       <Routes>
 
         {/* Public + Auth pages (Navbar + Footer) */}
-        <Route element={<PublicLayout />}>
+        <Route element={<DashboardLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/services" element={<ServicesPage />} />
@@ -85,7 +83,7 @@ const App = () => (
         </Route>
 
         {/* Admin Routes */}
-        <Route element={<ProtectedRoute roles={['admin', 'superadmin']}><AdminLayout /></ProtectedRoute>}>
+        <Route element={<ProtectedRoute roles={['admin', 'superadmin']}><DashboardLayout /></ProtectedRoute>}>
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/teachers" element={<AdminTeachers />} />

@@ -608,19 +608,31 @@ const Navbar = () => {
                 </button>
               )}
 
-              {/* Hamburger pill — always visible on mobile */}
-              <button
-                onClick={openNavPanel}
-                aria-label="Open navigation"
-                className={`flex items-center gap-1.5 pl-1 pr-3 py-1 rounded-full text-[11px] font-semibold shadow-sm transition-all duration-200 ${
-                  navPanelOpen ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-600'
-                }`}
-              >
-                <div className="w-6 h-6 rounded-full bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0">
-                  <Menu size={12} className="text-white" />
+              {/* Hamburger pill — only when NOT logged in */}
+              {!user && (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-1.5 pl-1 pr-3 py-1 bg-white border border-blue-600 text-blue-600 rounded-full text-[11px] font-semibold shadow-sm"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                      <User size={12} className="text-blue-600" />
+                    </div>
+                    Login
+                  </Link>
+
+                  <button
+                    onClick={openNavPanel}
+                    aria-label="Open navigation"
+                    className="flex items-center gap-1.5 pl-1 pr-3 py-1 bg-blue-600 text-white rounded-full text-[11px] font-semibold shadow-sm"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0">
+                      <Menu size={12} className="text-white" />
+                    </div>
+                    Menu
+                  </button>
                 </div>
-                Menu
-              </button>
+              )}
             </div>
 
           </div>
