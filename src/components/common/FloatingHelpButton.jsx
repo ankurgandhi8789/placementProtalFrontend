@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 
 export default function FloatingHelpButton() {
-  const [hovered, setHovered] = useState(false);
   const [pulse, setPulse] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setPulse(false), 3000);
+    const timer = setTimeout(() => setPulse(false), 3600);
     return () => clearTimeout(timer);
   }, []);
 
@@ -16,159 +15,184 @@ export default function FloatingHelpButton() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500;600&display=swap');
 
-        .float-btn-wrap {
-          position: fixed;
-          bottom: 32px;
-          right: 28px;
-          z-index: 9999;
-          font-family: 'Syne', sans-serif;
-        }
-
-        .float-btn {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
-          border: 1.5px solid rgba(99, 179, 237, 0.35);
-          border-radius: 999px;
-          padding: 14px 24px 14px 18px;
-          cursor: pointer;
-          box-shadow:
-            0 8px 32px rgba(0,0,0,0.45),
-            0 0 0 0 rgba(99,179,237,0.4),
-            inset 0 1px 0 rgba(255,255,255,0.07);
-          transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-          text-decoration: none;
-          outline: none;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .float-btn::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(99,179,237,0.12), rgba(160,108,255,0.08));
-          opacity: 0;
-          transition: opacity 0.3s ease;
-          border-radius: 999px;
-        }
-
-        .float-btn:hover::before {
-          opacity: 1;
-        }
-
-        .float-btn:hover {
-          transform: translateY(-3px) scale(1.04);
-          border-color: rgba(99, 179, 237, 0.7);
-          box-shadow:
-            0 16px 48px rgba(0,0,0,0.5),
-            0 0 28px rgba(99,179,237,0.2),
-            inset 0 1px 0 rgba(255,255,255,0.1);
-        }
-
-        .float-btn:active {
-          transform: translateY(-1px) scale(0.98);
-        }
-
-        .btn-icon {
-          width: 36px;
-          height: 36px;
-          background: linear-gradient(135deg, #63b3ed, #a06cff);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          font-size: 18px;
-          box-shadow: 0 0 12px rgba(99,179,237,0.4);
-          transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .float-btn:hover .btn-icon {
-          transform: rotate(15deg) scale(1.1);
-        }
-
-        .btn-text-block {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .btn-label {
-          font-size: 13px;
-          font-weight: 700;
-          color: #e2e8f0;
-          letter-spacing: 0.04em;
-          line-height: 1;
-          white-space: nowrap;
-          text-transform: uppercase;
-        }
-
-        .btn-sub {
-          font-size: 11px;
-          font-weight: 600;
-          color: #63b3ed;
-          letter-spacing: 0.02em;
-          margin-top: 3px;
-          line-height: 1;
-          white-space: nowrap;
-        }
-
-        /* Pulse ring animation on initial load */
-        .pulse-ring {
-          position: absolute;
-          inset: -6px;
-          border-radius: 999px;
-          border: 2px solid rgba(99, 179, 237, 0.6);
-          animation: pulseRing 1.2s ease-out 3;
-          pointer-events: none;
+        @keyframes geminiShimmer {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
 
         @keyframes pulseRing {
-          0%   { opacity: 1; transform: scale(1); }
-          100% { opacity: 0; transform: scale(1.18); }
-        }
-
-        /* Dot indicator */
-        .live-dot {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          width: 8px;
-          height: 8px;
-          background: #48bb78;
-          border-radius: 50%;
-          box-shadow: 0 0 6px #48bb78;
-          animation: liveBlink 2s ease-in-out infinite;
+          0%   { opacity: 0.8; transform: scale(1); }
+          100% { opacity: 0;   transform: scale(1.3); }
         }
 
         @keyframes liveBlink {
           0%, 100% { opacity: 1; }
-          50%       { opacity: 0.3; }
+          50%       { opacity: 0.25; }
+        }
+
+        .fab-wrapper {
+          position: fixed;
+          bottom: 24px;
+          right: 20px;
+          z-index: 100;
+          font-family: 'Google Sans', 'Segoe UI', sans-serif;
+        }
+
+        .fab-outer {
+          position: relative;
+          border-radius: 999px;
+          padding: 2px;
+          background: linear-gradient(
+            270deg,
+            #4285F4, #9B72CB, #D96570, #F4B400, #0F9D58, #4285F4
+          );
+          background-size: 300% 300%;
+          animation: geminiShimmer 4s ease infinite;
+          box-shadow: 0 4px 20px rgba(66, 133, 244, 0.22);
+          transition: box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        .fab-outer:hover {
+          box-shadow: 0 6px 28px rgba(66, 133, 244, 0.36);
+          transform: translateY(-2px) scale(1.03);
+        }
+
+        .fab-outer:active {
+          transform: scale(0.97);
+        }
+
+        .fab-inner {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #ffffff;
+          border-radius: 999px;
+          padding: 10px 18px 10px 12px;
+          cursor: pointer;
+          border: none;
+          outline: none;
+          transition: background 0.2s ease;
+        }
+
+        .fab-inner:hover {
+          background: #f8f9ff;
+        }
+
+        .fab-icon {
+          width: 26px;
+          height: 26px;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .fab-icon svg {
+          width: 22px;
+          height: 22px;
+        }
+
+        .fab-text {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          line-height: 1;
+        }
+
+        .fab-title {
+          font-size: 12px;
+          font-weight: 600;
+          color: #1f1f1f;
+          letter-spacing: 0.01em;
+          white-space: nowrap;
+        }
+
+        .fab-sub {
+          font-size: 10px;
+          font-weight: 500;
+          margin-top: 3px;
+          white-space: nowrap;
+          background: linear-gradient(90deg, #4285F4, #9B72CB, #D96570);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .fab-pulse {
+          position: absolute;
+          inset: -4px;
+          border-radius: 999px;
+          border: 2px solid rgba(66, 133, 244, 0.5);
+          animation: pulseRing 1.1s ease-out 3;
+          pointer-events: none;
+        }
+
+        .fab-dot {
+          position: absolute;
+          top: 0px;
+          right: 0px;
+          width: 8px;
+          height: 8px;
+          background: #0F9D58;
+          border-radius: 50%;
+          border: 1.5px solid #fff;
+          animation: liveBlink 2.4s ease-in-out infinite;
+        }
+
+        @media (max-width: 480px) {
+          .fab-wrapper {
+            bottom: 16px;
+            right: 14px;
+          }
+          .fab-inner {
+            padding: 9px 14px 9px 10px;
+            gap: 6px;
+          }
+          .fab-icon svg {
+            width: 18px;
+            height: 18px;
+          }
+          .fab-title {
+            font-size: 11px;
+          }
+          .fab-sub {
+            display: none;
+          }
         }
       `}</style>
 
-      <div className="float-btn-wrap">
-        <button
-          className="float-btn"
-          onClick={handleClick}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          aria-label="Ask a question - I have the solution to every question"
-        >
-          {pulse && <span className="pulse-ring" />}
-          <span className="live-dot" />
+      <div className="fab-wrapper">
+        <div className="fab-outer">
+          {pulse && <span className="fab-pulse" />}
+          <span className="fab-dot" />
 
-          <span className="btn-icon">💡</span>
+          <button className="fab-inner" onClick={handleClick} aria-label="Ask me anything">
+            <span className="fab-icon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%"   stopColor="#4285F4"/>
+                    <stop offset="40%"  stopColor="#9B72CB"/>
+                    <stop offset="70%"  stopColor="#D96570"/>
+                    <stop offset="100%" stopColor="#F4B400"/>
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M12 2C12 2 13.2 8 17 9C20.8 10 22 12 22 12C22 12 20.8 14 17 15C13.2 16 12 22 12 22C12 22 10.8 16 7 15C3.2 14 2 12 2 12C2 12 3.2 10 7 9C10.8 8 12 2 12 2Z"
+                  fill="url(#starGrad)"
+                />
+              </svg>
+            </span>
 
-          <span className="btn-text-block">
-            <span className="btn-label">Got a Question?</span>
-            <span className="btn-sub">I have every answer ✦</span>
-          </span>
-        </button>
+            <span className="fab-text">
+              <span className="fab-title">Ask me anything</span>
+              <span className="fab-sub">I have every answer</span>
+            </span>
+          </button>
+        </div>
       </div>
     </>
   );
