@@ -11,6 +11,8 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { teacherAPI, schoolAPI } from '../../api';
 
+
+
 // ── Nav data ──────────────────────────────────────────────
 const navLinks = [
   { label: 'Home',          to: '/',              icon: Home },
@@ -399,6 +401,7 @@ const UserPanel = ({ open, onClose, user, onLogout, roleData }) => {
 
 // ── NAV PANEL (hamburger — guest & mobile) ────────────────
 const NavPanel = ({ open, onClose, user }) => {
+  const { openLogin, openRegister } = useAuth();
   const ref = useRef(null);
 
   useEffect(() => {
@@ -434,27 +437,27 @@ const NavPanel = ({ open, onClose, user }) => {
             <hr className="border-gray-100 my-3" />
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[.7px] mb-3 ml-1">Get Started</p>
             <div className="flex flex-col gap-2">
-              <Link
-                to="/register?role=teacher"
-                onClick={onClose}
+              {/* ✅ CHANGED: was <Link to="/register?role=teacher"> */}
+              <button
+                onClick={() => { onClose(); openRegister('teacher'); }}
                 className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl py-3 text-[13px] font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all"
               >
                 <GraduationCap size={15} /> Register as Teacher
-              </Link>
-              <Link
-                to="/register?role=school"
-                onClick={onClose}
+              </button>
+              {/* ✅ CHANGED: was <Link to="/register?role=school"> */}
+              <button
+                onClick={() => { onClose(); openRegister('school'); }}
                 className="flex items-center justify-center gap-2 border-[1.5px] border-blue-600 text-blue-700 rounded-xl py-3 text-[13px] font-semibold hover:bg-blue-50 transition-colors"
               >
                 <School size={15} /> Register as School
-              </Link>
-              <Link
-                to="/login"
-                onClick={onClose}
+              </button>
+              {/* ✅ CHANGED: was <Link to="/login"> */}
+              <button
+                onClick={() => { onClose(); openLogin(); }}
                 className="flex items-center justify-center gap-2 border border-gray-200 text-gray-600 rounded-xl py-3 text-[13px] font-medium hover:bg-gray-50 transition-colors"
               >
                 <User size={14} /> Login to Account
-              </Link>
+              </button>
             </div>
           </>
         )}
@@ -489,7 +492,7 @@ const Navbar = () => {
   const [navPanelOpen,  setNavPanelOpen]  = useState(false);
   const [scrolled,      setScrolled]      = useState(false);
   const [roleData,      setRoleData]      = useState({});
-  const { user, logout } = useAuth();
+  const { user, logout, openLogin, openRegister } = useAuth();
   const navigate         = useNavigate();
 
   useEffect(() => {
@@ -577,17 +580,26 @@ const Navbar = () => {
                 </button>
               ) : (
                 <>
-                  <Link to="/login"
-                    className="px-4 py-1.5 border border-gray-200 text-gray-700 rounded-full text-[12px] font-semibold hover:border-blue-400 hover:text-blue-600 transition-all">
+                  {/* ✅ CHANGED: was <Link to="/login"> — now opens modal */}
+                  <button
+                    onClick={openLogin}
+                    className="px-4 py-1.5 border border-gray-200 text-gray-700 rounded-full text-[12px] font-semibold hover:border-blue-400 hover:text-blue-600 transition-all"
+                  >
                     Login
-                  </Link>
-                  <Link to="/register"
-                    className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-full text-[12px] font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all shadow-sm">
+                  </button>
+                  {/* ✅ CHANGED: was <Link to="/register"> — now opens modal */}
+                  <button
+                    onClick={() => openRegister('teacher')}
+                    className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-full text-[12px] font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all shadow-sm"
+                  >
                     Register
-                  </Link>
+                  </button>
                 </>
               )}
             </div>
+
+
+
 
             {/* Mobile right */}
             <div className="lg:hidden flex items-center gap-2">
@@ -607,20 +619,21 @@ const Navbar = () => {
                   {user.name.split(' ')[0]}
                 </button>
               )}
-
-              {/* Hamburger pill — only when NOT logged in */}
+            
+              {/* Guest: Login + Menu buttons */}
               {!user && (
                 <div className="flex items-center gap-2">
-                  <Link
-                    to="/login"
+                  {/* ✅ CHANGED: was <Link to="/login"> — now opens modal */}
+                  <button
+                    onClick={openLogin}
                     className="flex items-center gap-1.5 pl-1 pr-3 py-1 bg-white border border-blue-600 text-blue-600 rounded-full text-[11px] font-semibold shadow-sm"
                   >
                     <div className="w-6 h-6 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
                       <User size={12} className="text-blue-600" />
                     </div>
                     Login
-                  </Link>
-
+                  </button>
+            
                   <button
                     onClick={openNavPanel}
                     aria-label="Open navigation"

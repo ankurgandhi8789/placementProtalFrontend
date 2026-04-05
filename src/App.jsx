@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider   } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import GuestRoute from './components/common/GuestRoute';
+import AuthModal from './components/common/AuthModal';
 
 // Layouts
 import DashboardLayout from './components/layout/DashboardLayout';
+
 
 // Public Pages
 import HomePage from './pages/public/HomePage';
@@ -14,10 +15,6 @@ import ServicesPage from './pages/public/ServicesPage';
 import ContactPage from './pages/public/ContactPage';
 import VacancyPage from './pages/public/VacancyPage';
 import TermsPage from './pages/public/TermsPage';
-import LoginPage from './pages/public/LoginPage';
-import RegisterPage from './pages/public/RegisterPage';
-import ForgotPasswordPage from './pages/public/ForgotPasswordPage';
-import ResetPasswordPage from './pages/public/ResetPasswordPage';
 
 // Teacher Pages
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
@@ -46,6 +43,8 @@ const App = () => (
   <BrowserRouter>
     <AuthProvider>
       <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', fontSize: '14px' } }} />
+
+      <AuthModal />
       <Routes>
 
         {/* Public + Auth pages (Navbar + Footer) */}
@@ -56,11 +55,7 @@ const App = () => (
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/vacancy" element={<VacancyPage />} />
           <Route path="/terms/teacher" element={<TermsPage role="teacher" />} />
-          <Route path="/terms/school" element={<TermsPage role="school" />} />
-          <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
-          <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
-          <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
-          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/terms/school" element={<TermsPage role="school" />} />      
         </Route>
 
         {/* Teacher Routes */}
