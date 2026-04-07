@@ -69,10 +69,11 @@ const sliderSettings = {
       }
     },
     {
-      breakpoint: 768,
+      breakpoint: 640,
       settings: {
         slidesToShow: 1,
         slidesToScroll: 1,
+        dots: true,
       }
     }
   ]
@@ -198,12 +199,13 @@ const HomePage = () => {
       </section> 
 
       {/* ── IMAGE SLIDER ─────────────────────────────────── */}
-      <section className="bg-white py-10">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-white py-6 sm:py-10">
+        <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8">
           <Slider {...sliderSettings}>
             {slides.map((slide, i) => (
-              <div key={i} className="px-3">
-                <div className="rounded-2xl overflow-hidden shadow-xl" style={{ aspectRatio: '210/297' }}>
+              <div key={i} className="px-2 sm:px-3">
+                <div className="rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl" 
+                     style={{ aspectRatio: window.innerWidth < 640 ? '16/9' : '3/4' }}>
                   <div className="relative w-full h-full">
                     <img
                       src={slide.url}
@@ -211,15 +213,15 @@ const HomePage = () => {
                       className="w-full h-full object-cover"
                     />
                     {(slide.title || slide.subtitle) && (
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4 sm:p-6">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-3 sm:p-6">
                         <div>
                           {slide.title && (
-                            <h3 className="text-white text-base sm:text-xl lg:text-2xl font-extrabold drop-shadow">
+                            <h3 className="text-white text-sm sm:text-xl lg:text-2xl font-extrabold drop-shadow leading-tight">
                               {slide.title}
                             </h3>
                           )}
                           {slide.subtitle && (
-                            <p className="text-white/80 text-xs sm:text-sm lg:text-base mt-1">{slide.subtitle}</p>
+                            <p className="text-white/90 text-xs sm:text-sm lg:text-base mt-0.5 sm:mt-1">{slide.subtitle}</p>
                           )}
                         </div>
                       </div>
