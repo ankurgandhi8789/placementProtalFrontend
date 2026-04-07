@@ -60,17 +60,12 @@ const sliderSettings = {
   autoplay: true,
   autoplaySpeed: 4000,
   arrows: false,
-  swipe: true,
-  swipeToSlide: true,
-  touchThreshold: 10,
   responsive: [
     {
       breakpoint: 1024,
       settings: {
         slidesToShow: 2,
         slidesToScroll: 1,
-        swipe: true,
-        swipeToSlide: true,
       }
     },
     {
@@ -78,8 +73,6 @@ const sliderSettings = {
       settings: {
         slidesToShow: 1,
         slidesToScroll: 1,
-        swipe: true,
-        swipeToSlide: true,
       }
     }
   ]
@@ -205,7 +198,7 @@ const HomePage = () => {
       </section> 
 
       {/* ── IMAGE SLIDER ─────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-10">
+      <section className="bg-white py-10">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <Slider {...sliderSettings}>
             {slides.map((slide, i) => (
