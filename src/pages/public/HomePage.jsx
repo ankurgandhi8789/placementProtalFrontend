@@ -60,12 +60,17 @@ const sliderSettings = {
   autoplay: true,
   autoplaySpeed: 4000,
   arrows: false,
+  swipe: true,
+  swipeToSlide: true,
+  touchThreshold: 10,
   responsive: [
     {
       breakpoint: 1024,
       settings: {
         slidesToShow: 2,
         slidesToScroll: 1,
+        swipe: true,
+        swipeToSlide: true,
       }
     },
     {
@@ -73,6 +78,8 @@ const sliderSettings = {
       settings: {
         slidesToShow: 1,
         slidesToScroll: 1,
+        swipe: true,
+        swipeToSlide: true,
       }
     }
   ]
