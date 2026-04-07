@@ -55,28 +55,11 @@ const sliderSettings = {
   dots: true,
   infinite: true,
   speed: 600,
-  slidesToShow: 3,
+  slidesToShow: 1,   // ✅ ALWAYS 1
   slidesToScroll: 1,
   autoplay: true,
   autoplaySpeed: 4000,
   arrows: false,
-  responsive: [
-    {
-      breakpoint: 1024,
-      settings: {
-        slidesToShow: 2,
-        slidesToScroll: 1,
-      },
-    },
-    {
-      breakpoint: 640,
-      settings: {
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        dots: true,
-      },
-    },
-  ],
 };
 
 const defaultSlides = [
@@ -199,44 +182,48 @@ const HomePage = () => {
       </section> 
 
       {/* ── IMAGE SLIDER ─────────────────────────────────── */}
-<section className="bg-white py-6 sm:py-10">
-  <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8">
-    <Slider {...sliderSettings}>
-      {slides.map((slide, i) => (
-        <div key={i} className="px-2 sm:px-3">
-          <div
-            className="rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl"
-            style={{ aspectRatio: '210 / 297' }}
-          >
-            <div className="relative w-full h-full">
-              <img
-                src={slide.url}
-                alt={slide.title || `Slide ${i + 1}`}
-                className="w-full h-full object-cover"
-              />
-              {(slide.title || slide.subtitle) && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-3 sm:p-6">
-                  <div>
-                    {slide.title && (
-                      <h3 className="text-white text-sm sm:text-xl lg:text-2xl font-extrabold drop-shadow leading-tight">
-                        {slide.title}
-                      </h3>
+      <section className="bg-white py-6 sm:py-10">
+        <div className="w-full mx-auto px-2 sm:px-4 lg:px-8">
+          <Slider {...sliderSettings}>
+            {slides.map((slide, i) => (
+              <div key={i} className="px-0 sm:px-2">
+                
+                {/* ✅ A4 IMAGE */}
+                <div className="w-full max-w-4xl mx-auto rounded-xl sm:rounded-2xl overflow-hidden shadow-lg aspect-[1/1.414]">
+                  
+                  <div className="relative w-full h-full">
+                    
+                    <img
+                      src={slide.url}
+                      alt={slide.title || `Slide ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+
+                    {(slide.title || slide.subtitle) && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-4 sm:p-6">
+                        <div>
+                          {slide.title && (
+                            <h3 className="text-white text-lg sm:text-2xl font-bold">
+                              {slide.title}
+                            </h3>
+                          )}
+                          {slide.subtitle && (
+                            <p className="text-white/90 text-sm sm:text-base mt-1">
+                              {slide.subtitle}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     )}
-                    {slide.subtitle && (
-                      <p className="text-white/90 text-xs sm:text-sm lg:text-base mt-0.5 sm:mt-1">
-                        {slide.subtitle}
-                      </p>
-                    )}
+
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
+
+              </div>
+            ))}
+          </Slider>
         </div>
-      ))}
-    </Slider>
-  </div>
-</section>
+      </section>
 
       {/* ── ABOUT SECTION ────────────────────────────────── */}
       <section className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-16">
