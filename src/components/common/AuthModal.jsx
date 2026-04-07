@@ -38,10 +38,18 @@ const LoginView = ({ onSwitch, onClose }) => {
       login(res.token, res.user);
       toast.success(`Welcome back, ${res.user.name}!`);
       onClose();
+      
+      // Redirect based on role
       const role = res.user.role;
-      if (role === 'teacher') navigate('/teacher/dashboard');
-      else if (role === 'school') navigate('/school/dashboard');
-      else navigate('/admin/dashboard');
+      if (role === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else if (role === 'school') {
+        navigate('/school/dashboard');
+      } else if (role === 'admin' || role === 'superadmin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid email or password');
     } finally {
@@ -125,8 +133,18 @@ const RegisterView = ({ onSwitch, onClose, defaultRole = 'teacher' }) => {
       login(res.token, res.user);
       toast.success('Account created successfully!');
       onClose();
-      if (res.user.role === 'teacher') navigate('/teacher/dashboard');
-      else navigate('/school/dashboard');
+      
+      // Redirect based on role
+      const role = res.user.role;
+      if (role === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else if (role === 'school') {
+        navigate('/school/dashboard');
+      } else if (role === 'admin' || role === 'superadmin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {

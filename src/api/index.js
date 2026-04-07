@@ -52,12 +52,20 @@ export const adminAPI = {
   getContent: () => api.get('/admin/content'),
   addSliderImage: (formData) => api.post('/admin/content/slider', formData),
   deleteSliderImage: (id) => api.delete(`/admin/content/slider/${id}`),
-  addBanner: (formData) => api.post('/admin/content/banner', formData),
-  deleteBanner: (id) => api.delete(`/admin/content/banner/${id}`),
   updateStats: (data) => api.put('/admin/content/stats', data),
   updateContactInfo: (data) => api.put('/admin/content/contact', data),
-  addVacancy: (data) => api.post('/admin/content/vacancies', data),
-  updateVacancy: (id, data) => api.put(`/admin/content/vacancies/${id}`, data),
+  addVacancy: (data) => {
+    const isFormData = data instanceof FormData;
+    return api.post('/admin/content/vacancies', data, 
+      isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+    );
+  },
+  updateVacancy: (id, data) => {
+    const isFormData = data instanceof FormData;
+    return api.put(`/admin/content/vacancies/${id}`, data,
+      isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+    );
+  },
   deleteVacancy: (id) => api.delete(`/admin/content/vacancies/${id}`),
 };
 

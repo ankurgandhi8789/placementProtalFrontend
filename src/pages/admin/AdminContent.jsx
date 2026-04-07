@@ -9,7 +9,7 @@ const AdminContent = () => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingSlider, setUploadingSlider] = useState(false);
-  const [uploadingBanner, setUploadingBanner] = useState(false);
+
   const [savingStats, setSavingStats] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
   const [activeTab, setActiveTab] = useState('slider');
@@ -45,23 +45,7 @@ const AdminContent = () => {
     }
   };
 
-  const handleBannerUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingBanner(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-      await adminAPI.addBanner(formData);
-      toast.success('Banner added!');
-      fetchContent();
-    } catch {
-      toast.error('Upload failed');
-    } finally {
-      setUploadingBanner(false);
-      e.target.value = '';
-    }
-  };
+
 
   const handleDeleteSlider = async (id) => {
     if (!confirm('Delete this image?')) return;
@@ -72,14 +56,7 @@ const AdminContent = () => {
     } catch { toast.error('Failed to delete'); }
   };
 
-  const handleDeleteBanner = async (id) => {
-    if (!confirm('Delete this banner?')) return;
-    try {
-      await adminAPI.deleteBanner(id);
-      toast.success('Banner deleted');
-      fetchContent();
-    } catch { toast.error('Failed to delete'); }
-  };
+
 
   const onSaveStats = async (data) => {
     setSavingStats(true);
@@ -107,7 +84,6 @@ const AdminContent = () => {
 
   const tabs = [
     { key: 'slider',  label: 'Slider Images', icon: Image    },
-    { key: 'banners', label: 'Banners',        icon: Image    },
     { key: 'stats',   label: 'Stats',          icon: BarChart2},
     { key: 'contact', label: 'Contact Info',   icon: Phone    },
   ];
@@ -169,13 +145,14 @@ const AdminContent = () => {
               <p className="text-gray-300 text-xs mt-1">Upload your first image above</p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {content.sliderImages.map((img) => (
                 <div key={img._id}
-                  className="relative group rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
+                  className="relative group rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50"
+                  style={{ aspectRatio: '210/297' }}>
                   <img
                     src={img.url} alt={img.title || 'Slider'}
-                    className="w-full h-40 object-cover"
+                    className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent
                     opacity-0 group-hover:opacity-100 transition-opacity
@@ -187,60 +164,6 @@ const AdminContent = () => {
                       onClick={() => handleDeleteSlider(img._id)}
                       className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-xl
                         flex items-center justify-center transition-colors ml-auto flex-shrink-0"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Banners ── */}
-      {activeTab === 'banners' && (
-        <div className="space-y-4">
-
-          <label className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-            cursor-pointer transition-all shadow-sm ${
-            uploadingBanner
-              ? 'bg-blue-400 text-white cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'
-          }`}>
-            <Upload size={15} />
-            {uploadingBanner ? 'Uploading...' : 'Upload Banner'}
-            <input
-              type="file" accept="image/*" className="hidden"
-              onChange={handleBannerUpload} disabled={uploadingBanner}
-            />
-          </label>
-
-          {(!content?.banners || content.banners.length === 0) ? (
-            <div className="flex flex-col items-center justify-center py-14 bg-white
-              rounded-2xl border border-dashed border-gray-200 text-center">
-              <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
-                <Image size={24} className="text-gray-300" />
-              </div>
-              <p className="text-gray-400 font-medium text-sm">No banners yet</p>
-              <p className="text-gray-300 text-xs mt-1">Upload your first banner above</p>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-3">
-              {content.banners.map((banner) => (
-                <div key={banner._id}
-                  className="relative group rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
-                  <img
-                    src={banner.url} alt={banner.title || 'Banner'}
-                    className="w-full h-32 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent
-                    opacity-0 group-hover:opacity-100 transition-opacity
-                    flex items-end justify-end p-3">
-                    <button
-                      onClick={() => handleDeleteBanner(banner._id)}
-                      className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-xl
-                        flex items-center justify-center transition-colors"
                     >
                       <Trash2 size={13} />
                     </button>

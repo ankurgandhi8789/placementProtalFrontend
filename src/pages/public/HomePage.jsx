@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import SliderPkg from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { publicAPI } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 import {
   GraduationCap, School, Phone, Briefcase, Star, Users,
   TrendingUp, Award, ArrowRight, CheckCircle, ChevronRight
@@ -11,17 +12,70 @@ import {
 import FloatingHelpButton from '../../components/common/FloatingHelpButton'
 import RoleCards from '../../components/common/RoleCards';
 
+const useCountUp = (end, duration = 2000, start = 0) => {
+  const [count, setCount] = useState(start);
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let startTime;
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(start + (end - start) * easeOut));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+  }, [isVisible, end, duration, start]);
+
+  return [count, ref];
+};
+
 const Slider = SliderPkg.default ?? SliderPkg;
 
 const sliderSettings = {
   dots: true,
   infinite: true,
   speed: 600,
-  slidesToShow: 1,
+  slidesToShow: 3,
   slidesToScroll: 1,
   autoplay: true,
   autoplaySpeed: 4000,
   arrows: false,
+  responsive: [
+    {
+      breakpoint: 1024,
+      settings: {
+        slidesToShow: 2,
+        slidesToScroll: 1,
+      }
+    },
+    {
+      breakpoint: 768,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+      }
+    }
+  ]
 };
 
 const defaultSlides = [
@@ -42,12 +96,48 @@ const defaultSlides = [
   },
 ];
 
+const StatCard = ({ icon: Icon, label, value, suffix = '', trend, iconBg, iconColor, numColor }) => {
+  const numValue = parseInt(value);
+  const [count, ref] = useCountUp(numValue, 2000);
+
+  return (
+    <div
+      ref={ref}
+      className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 text-center"
+    >
+      <div className={`w-12 h-12 ${iconBg} rounded-xl flex items-center justify-center mx-auto mb-4`}>
+        <Icon className={`w-6 h-6 ${iconColor}`} />
+      </div>
+      <p className={`text-3xl font-extrabold ${numColor}`}>
+        {count}{suffix}
+      </p>
+      <p className="text-gray-500 text-sm font-medium mt-1">{label}</p>
+      <p className="text-emerald-500 text-xs font-semibold mt-2">{trend}</p>
+    </div>
+  );
+};
+
 const HomePage = () => {
   const [content, setContent] = useState(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     publicAPI.getContent().then(({ data }) => setContent(data)).catch(() => {});
   }, []);
+
+  const handlePostJobClick = (e) => {
+    if (user) {
+      e.preventDefault();
+      if (user.role === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else if (user.role === 'school') {
+        navigate('/school/dashboard');
+      } else if (user.role === 'admin' || user.role === 'superadmin') {
+        navigate('/admin/dashboard');
+      }
+    }
+  };
 
   const slides =
     content?.sliderImages?.filter((s) => s.isActive).length > 0
@@ -67,21 +157,21 @@ const HomePage = () => {
 
       <FloatingHelpButton></FloatingHelpButton>   
 
-      <section className="relative overflow-hidden px-6 py-20 md:py-24 bg-gradient-to-br from-blue-900 via-blue-800 to-[#1a3a6e]">
+      <section className="relative overflow-hidden px-6 py-12 bg-gradient-to-br from-blue-900 via-blue-800 to-[#1a3a6e]">
 
         {/* Content */}
-        <div className="max-w-4xl mx-auto text-center relative z-10 animate-fadeUp">
+        <div className="max-w-4xl mx-auto text-center relative z-10">
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-7 text-sm rounded-full 
+          <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs rounded-full 
             bg-white/10 border border-white/20 text-white/80">
             <span>🇮🇳</span>
             <span>India's Teacher Placement Consultancy • माँ सावित्री कंसल्टेंसी सेवा</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-white font-extrabold leading-tight mb-5 
-            text-4xl sm:text-5xl md:text-6xl">
+          <h1 className="text-white font-extrabold leading-tight mb-3 
+            text-3xl sm:text-4xl md:text-5xl">
             <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               Maa Savitri
             </span>{" "}
@@ -90,9 +180,9 @@ const HomePage = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-white/70 text-lg leading-relaxed mb-12">
+          <p className="text-white/70 text-base leading-relaxed mb-6">
             माँ सावित्री कंसल्टेंसी सेवा <br />
-            <span className="text-white/50 text-base">
+            <span className="text-white/50 text-sm">
               Connecting qualified teachers with the right schools since day one.
             </span>
           </p>
@@ -108,40 +198,42 @@ const HomePage = () => {
       </section> 
 
       {/* ── IMAGE SLIDER ─────────────────────────────────── */}
-      <section className="bg-white py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl overflow-hidden shadow-xl">
-            <Slider {...sliderSettings}>
-              {slides.map((slide, i) => (
-                <div key={i} className="relative">
-                  <img
-                    src={slide.url}
-                    alt={slide.title || `Slide ${i + 1}`}
-                    className="w-full h-64 sm:h-80 lg:h-[420px] object-cover"
-                  />
-                  {(slide.title || slide.subtitle) && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6 sm:p-8">
-                      <div>
-                        {slide.title && (
-                          <h3 className="text-white text-xl sm:text-3xl font-extrabold drop-shadow">
-                            {slide.title}
-                          </h3>
-                        )}
-                        {slide.subtitle && (
-                          <p className="text-white/80 text-sm sm:text-base mt-1">{slide.subtitle}</p>
-                        )}
+      <section className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-10">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <Slider {...sliderSettings}>
+            {slides.map((slide, i) => (
+              <div key={i} className="px-3">
+                <div className="rounded-2xl overflow-hidden shadow-xl" style={{ aspectRatio: '210/297' }}>
+                  <div className="relative w-full h-full">
+                    <img
+                      src={slide.url}
+                      alt={slide.title || `Slide ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {(slide.title || slide.subtitle) && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4 sm:p-6">
+                        <div>
+                          {slide.title && (
+                            <h3 className="text-white text-base sm:text-xl lg:text-2xl font-extrabold drop-shadow">
+                              {slide.title}
+                            </h3>
+                          )}
+                          {slide.subtitle && (
+                            <p className="text-white/80 text-xs sm:text-sm lg:text-base mt-1">{slide.subtitle}</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              ))}
-            </Slider>
-          </div>
+              </div>
+            ))}
+          </Slider>
         </div>
       </section>
 
       {/* ── ABOUT SECTION ────────────────────────────────── */}
-      <section className="bg-white py-16">
+      <section className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -149,26 +241,23 @@ const HomePage = () => {
               <div className="h-1 w-12 rounded-full mb-5" style={{ background: 'linear-gradient(to right, #2563EB, #F59E0B)' }} />
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">About Us</span>
               <h2 className="text-3xl lg:text-4xl font-extrabold text-gray-900 mt-2 mb-5">
-                Bridging Education with{' '}
-                <span className="text-blue-600">Excellence</span>
+                M. S. Consultancy Services
               </h2>
-              <p className="text-gray-600 text-base leading-relaxed mb-6">
-                {content?.aboutText ||
-                  'Maa Savitri Consultancy Services connects skilled teachers with top schools, ensuring quality education and professional growth.'}
+              <p className="text-gray-600 text-base leading-relaxed mb-4">
+                M. S. Consultancy Services is a premier educational consultancy firm based in <strong>Siwan, Bihar</strong>.
               </p>
-              <ul className="space-y-3">
-                {[
-                  'Verified teacher profiles',
-                  'Trusted school network',
-                  'Transparent hiring process',
-                  'Dedicated support team',
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-gray-700 text-sm">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              <p className="text-gray-600 text-base leading-relaxed mb-4">
+                We are dedicated to fostering educational excellence by providing highly trained, educated, and diligent teachers to schools across Bihar and the eastern region of Uttar Pradesh.
+              </p>
+              <p className="text-gray-600 text-base leading-relaxed mb-6">
+                Our mission is to enhance the quality of education by ensuring that every school we serve has access to top-notch teaching professionals who are passionate about nurturing young minds and shaping the future of education.
+              </p>
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md text-sm"
+              >
+                Read More <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
@@ -189,9 +278,9 @@ const HomePage = () => {
       </section>
 
       {/* ── CTA SECTION ──────────────────────────────────── */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-amber-400 rounded-2xl p-8 lg:p-12 text-center">
+          <div className="bg-gradient-to-r from-amber-400 to-orange-400 rounded-2xl p-8 lg:p-12 text-center shadow-xl">
             <h3 className="text-2xl lg:text-3xl font-extrabold text-gray-900 mb-3">
               Ready to Get Started?
             </h3>
@@ -223,36 +312,42 @@ const HomePage = () => {
       </section>
 
       {/* ── SCHOOL PROMO SECTION ─────────────────────────── */}
-      <section className="bg-blue-900 py-16">
+      <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-10">
             <div className="flex-1 text-center lg:text-left">
-              <span className="text-xs font-semibold uppercase tracking-widest text-blue-300">For Schools</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-blue-300">For Schools & Organizations</span>
               <h2 className="text-3xl lg:text-4xl font-extrabold text-white mt-2 mb-4">
-                Find the Perfect Teacher for Your School
+                School/Institute and Organizations can post your requirements
               </h2>
-              <p className="text-blue-200 leading-relaxed mb-6 max-w-lg">
-                Post your teacher requirements and let us handle the rest. Our expert team will match you with qualified, verified teachers who fit your school's culture and needs.
+              <h3 className="text-xl font-bold text-amber-400 mb-4">
+                Post Your Job / Requirements
+              </h3>
+              <p className="text-blue-200 leading-relaxed mb-4">
+                All schools, institutes, and organizations can easily post their job vacancies through our platform using a single streamlined process.
               </p>
-              <ul className="space-y-2 mb-8">
-                {[
-                  'Post requirements in minutes',
-                  'Get matched with verified teachers',
-                  'Admin-managed hiring pipeline',
-                  'No direct contact needed',
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-blue-100 text-sm">
-                    <CheckCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
+              <ul className="space-y-3 mb-8 text-blue-100">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm leading-relaxed">
+                    Click on the <strong>"Post Your Job Here"</strong> button below to open a Google Form. Fill in your specific requirements, including position details, qualifications, and other relevant information.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm leading-relaxed">
+                    Once the form is submitted, our team will review your request and contact you for confirmation and further processing.
+                  </span>
+                </li>
               </ul>
-              <Link
-                to="/register?role=school"
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handlePostJobClick}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-gray-900 font-bold rounded-xl hover:bg-amber-300 transition-all shadow-lg"
               >
-                <School className="w-5 h-5" /> Post Your Requirement →
-              </Link>
+                <School className="w-5 h-5" /> Post Your Job Here →
+              </a>
             </div>
             <div className="flex-shrink-0">
               <div className="w-52 h-52 bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl flex items-center justify-center shadow-2xl border border-white/10">
@@ -264,7 +359,7 @@ const HomePage = () => {
       </section>
 
       {/* ── STATS SECTION ────────────────────────────────── */}
-      <section className="bg-white py-16">
+      <section className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <div className="h-1 w-12 rounded-full mx-auto mb-4" style={{ background: 'linear-gradient(to right, #2563EB, #F59E0B)' }} />
@@ -272,24 +367,10 @@ const HomePage = () => {
             <p className="text-gray-500 mt-2 text-sm">Trusted by teachers and schools across India</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              { icon: Users, label: 'Happy Clients', value: stats.happyClients + '+', trend: '+12% this year', iconBg: 'bg-blue-50', iconColor: 'text-blue-600', numColor: 'text-blue-600' },
-              { icon: TrendingUp, label: 'Successful Placements', value: stats.successfulPlacements + '+', trend: '+18% this year', iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', numColor: 'text-emerald-600' },
-              { icon: Star, label: 'Conversion Rate', value: stats.conversionRate + '%', trend: 'Industry leading', iconBg: 'bg-amber-50', iconColor: 'text-amber-500', numColor: 'text-amber-500' },
-              { icon: Award, label: 'Awards Won', value: stats.awards + '+', trend: 'National recognition', iconBg: 'bg-purple-50', iconColor: 'text-purple-600', numColor: 'text-purple-600' },
-            ].map(({ icon: Icon, label, value, trend, iconBg, iconColor, numColor }) => (
-              <div
-                key={label}
-                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 text-center"
-              >
-                <div className={`w-12 h-12 ${iconBg} rounded-xl flex items-center justify-center mx-auto mb-4`}>
-                  <Icon className={`w-6 h-6 ${iconColor}`} />
-                </div>
-                <p className={`text-3xl font-extrabold ${numColor}`}>{value}</p>
-                <p className="text-gray-500 text-sm font-medium mt-1">{label}</p>
-                <p className="text-emerald-500 text-xs font-semibold mt-2">{trend}</p>
-              </div>
-            ))}
+            <StatCard icon={Users} label="Happy Clients" value={stats.happyClients} suffix="+" trend="+12% this year" iconBg="bg-blue-50" iconColor="text-blue-600" numColor="text-blue-600" />
+            <StatCard icon={TrendingUp} label="Successful Placements" value={stats.successfulPlacements} suffix="+" trend="+18% this year" iconBg="bg-emerald-50" iconColor="text-emerald-600" numColor="text-emerald-600" />
+            <StatCard icon={Star} label="Conversion Rate" value={stats.conversionRate} suffix="%" trend="Industry leading" iconBg="bg-amber-50" iconColor="text-amber-500" numColor="text-amber-500" />
+            <StatCard icon={Award} label="Awards Won" value={stats.awards} suffix="+" trend="National recognition" iconBg="bg-purple-50" iconColor="text-purple-600" numColor="text-purple-600" />
           </div>
         </div>
       </section>

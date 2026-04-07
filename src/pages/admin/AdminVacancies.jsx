@@ -7,7 +7,7 @@ import Spinner from '../../components/common/Spinner';
 import {
   Plus, Trash2, Edit3, X, Check, Briefcase,
   MapPin, DollarSign, BookOpen, School, ChevronDown,
-  ToggleLeft, ToggleRight, Save, AlertCircle
+  ToggleLeft, ToggleRight, Save, AlertCircle, Image as ImageIcon
 } from 'lucide-react';
 
 const SUBJECTS = ['Mathematics', 'Science', 'Physics', 'Chemistry', 'Biology', 'English', 'Hindi', 'Sanskrit', 'Social Studies', 'History', 'Geography', 'Economics', 'Commerce', 'Computer Science', 'Physical Education', 'Art & Craft', 'Music', 'EVS', 'Other'];
@@ -16,6 +16,25 @@ const CLASS_LEVELS = ['Nursery / Pre-Primary', 'KG', 'Class 1–2', 'Class 3–5
 // ─── Vacancy Form (used for add & edit) ────────────────────────────────────
 const VacancyForm = ({ onSubmit, defaultValues, onCancel, loading }) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(defaultValues?.image || null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleFormSubmit = (data) => {
+    onSubmit(data, imageFile);
+    if (!defaultValues) {
+      reset();
+      setImageFile(null);
+      setImagePreview(null);
+    }
+  };
 
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
@@ -30,8 +49,7 @@ const VacancyForm = ({ onSubmit, defaultValues, onCancel, loading }) => {
           </button>
         )}
       </div>
-      <form onSubmit={handleSubmit((d) => { onSubmit(d); if (!defaultValues) reset(); })}
-        className="space-y-4">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-3">
           {/* Title */}
           <div className="sm:col-span-2">
@@ -105,6 +123,34 @@ const VacancyForm = ({ onSubmit, defaultValues, onCancel, loading }) => {
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
+
+          {/* Image Upload */}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1">
+              <ImageIcon size={11} /> Vacancy Image (Optional)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white
+                focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3
+                file:rounded-lg file:border-0 file:text-xs file:font-semibold
+                file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            {imagePreview && (
+              <div className="mt-3 relative inline-block">
+                <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-xl border border-gray-200" />
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-2 pt-1">
@@ -139,6 +185,11 @@ const VacancyCard = ({ v, onEdit, onDelete, onToggle }) => (
           }`}>
             {v.isActive ? 'Active' : 'Inactive'}
           </span>
+          {v.image && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 flex items-center gap-1">
+              <ImageIcon size={10} /> Has Image
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-gray-500">
           <span className="flex items-center gap-0.5"><BookOpen size={10} />{v.subject}</span>
@@ -189,25 +240,47 @@ const AdminVacancies = () => {
   };
   useEffect(() => { fetchContent(); }, []);
 
-  const handleAdd = async (data) => {
+  const handleAdd = async (data, imageFile) => {
     setSubmitting(true);
     try {
-      await adminAPI.addVacancy(data);
+      const formData = new FormData();
+      formData.append('title', data.title || '');
+      formData.append('subject', data.subject || '');
+      formData.append('classLevel', data.classLevel || '');
+      formData.append('location', data.location || '');
+      formData.append('salary', data.salary || '');
+      formData.append('description', data.description || '');
+      if (imageFile) formData.append('image', imageFile);
+      
+      await adminAPI.addVacancy(formData);
       toast.success('Vacancy added!');
       setShowForm(false);
       fetchContent();
-    } catch { toast.error('Failed to add'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add');
+    }
     finally { setSubmitting(false); }
   };
 
-  const handleUpdate = async (data) => {
+  const handleUpdate = async (data, imageFile) => {
     setSubmitting(true);
     try {
-      await adminAPI.updateVacancy(editVacancy._id, data);
+      const formData = new FormData();
+      formData.append('title', data.title || '');
+      formData.append('subject', data.subject || '');
+      formData.append('classLevel', data.classLevel || '');
+      formData.append('location', data.location || '');
+      formData.append('salary', data.salary || '');
+      formData.append('description', data.description || '');
+      if (imageFile) formData.append('image', imageFile);
+      
+      await adminAPI.updateVacancy(editVacancy._id, formData);
       toast.success('Vacancy updated!');
       setEditVacancy(null);
       fetchContent();
-    } catch { toast.error('Failed to update'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update');
+    }
     finally { setSubmitting(false); }
   };
 
@@ -284,7 +357,7 @@ const AdminVacancies = () => {
       {/* Edit form */}
       {editVacancy && (
         <VacancyForm
-          defaultValues={{ title: editVacancy.title, subject: editVacancy.subject, classLevel: editVacancy.classLevel, location: editVacancy.location, salary: editVacancy.salary, description: editVacancy.description }}
+          defaultValues={{ title: editVacancy.title, subject: editVacancy.subject, classLevel: editVacancy.classLevel, location: editVacancy.location, salary: editVacancy.salary, description: editVacancy.description, image: editVacancy.image }}
           onSubmit={handleUpdate}
           onCancel={() => setEditVacancy(null)}
           loading={submitting}

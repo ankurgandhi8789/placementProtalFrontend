@@ -98,7 +98,7 @@ const StepCard = ({ num, title, points }) => (
 
 // ─── Main Component ────────────────────────────────────────────────────────
 const AboutPage = () => (
-  <div className="bg-[#F8FAFC]">
+  <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen">
     <FloatingHelpButton />
     <ScrollTopButton />
 
