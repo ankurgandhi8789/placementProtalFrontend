@@ -5,7 +5,7 @@ import FloatingHelpButton from '../../components/common/FloatingHelpButton'
 const ContactPage = () => (
   <div>
     <FloatingHelpButton></FloatingHelpButton> 
-    <div className="bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white py-16">
+    <div className="bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
         <p className="text-blue-100 max-w-xl mx-auto">Get in touch with our team for any queries or assistance.</p>

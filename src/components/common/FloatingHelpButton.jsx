@@ -2,15 +2,26 @@ import { useState, useEffect } from "react";
 
 export default function FloatingHelpButton() {
   const [pulse, setPulse] = useState(true);
+  const [showButton, setShowButton] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setPulse(false), 3600);
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowButton(window.scrollY <= 300);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleClick = () => {
     window.open("https://ask-question-client.vercel.app/", "_blank");
   };
+
+  if (!showButton) return null;
 
   return (
     <>
