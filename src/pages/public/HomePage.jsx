@@ -51,15 +51,41 @@ const useCountUp = (end, duration = 2000, start = 0) => {
 
 const Slider = SliderPkg.default ?? SliderPkg;
 
+// ✅ UPDATED: responsive sliderSettings
 const sliderSettings = {
   dots: true,
   infinite: true,
   speed: 600,
-  slidesToShow: 1,   // ✅ ALWAYS 1
-  slidesToScroll: 1,
   autoplay: true,
   autoplaySpeed: 4000,
   arrows: false,
+  slidesToScroll: 1,
+  responsive: [
+    {
+      breakpoint: 99999, // desktop & above (default)
+      settings: {
+        slidesToShow: 3,
+        centerMode: true,
+        centerPadding: '20px',
+      },
+    },
+    {
+      breakpoint: 1024, // tablet
+      settings: {
+        slidesToShow: 2,
+        centerMode: true,
+        centerPadding: '15px',
+      },
+    },
+    {
+      breakpoint: 640, // mobile
+      settings: {
+        slidesToShow: 1,
+        centerMode: false,
+        centerPadding: '0px',
+      },
+    },
+  ],
 };
 
 const defaultSlides = [
@@ -182,43 +208,39 @@ const HomePage = () => {
       </section> 
 
       {/* ── IMAGE SLIDER ─────────────────────────────────── */}
-      <section className="bg-white py-6 sm:py-10">
-        <div className="w-full mx-auto px-2 sm:px-4 lg:px-8">
+      {/* ✅ UPDATED: 3 images on desktop, 2 on tablet, 1 on mobile */}
+      <section className="bg-white py-8 sm:py-12 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
           <Slider {...sliderSettings}>
             {slides.map((slide, i) => (
-              <div key={i} className="px-0 sm:px-2">
-                
-                {/* ✅ A4 IMAGE */}
-                <div className="w-full max-w-4xl mx-auto rounded-xl sm:rounded-2xl overflow-hidden shadow-lg aspect-[1/1.414]">
-                  
+              <div key={i} className="px-2 flex justify-center">
+                {/* A4 ratio card — constrained max width so it never goes full screen */}
+                <div className="mx-auto w-full max-w-[260px] sm:max-w-[300px] lg:max-w-[320px] rounded-2xl overflow-hidden shadow-lg group"
+                  style={{ aspectRatio: '1 / 1.414' }}>
                   <div className="relative w-full h-full">
-                    
                     <img
                       src={slide.url}
                       alt={slide.title || `Slide ${i + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-
                     {(slide.title || slide.subtitle) && (
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-4 sm:p-6">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-4">
                         <div>
                           {slide.title && (
-                            <h3 className="text-white text-lg sm:text-2xl font-bold">
+                            <h3 className="text-white text-sm font-bold leading-tight">
                               {slide.title}
                             </h3>
                           )}
                           {slide.subtitle && (
-                            <p className="text-white/90 text-sm sm:text-base mt-1">
+                            <p className="text-white/80 text-xs mt-1">
                               {slide.subtitle}
                             </p>
                           )}
                         </div>
                       </div>
                     )}
-
                   </div>
                 </div>
-
               </div>
             ))}
           </Slider>
